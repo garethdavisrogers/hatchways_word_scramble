@@ -1,0 +1,45 @@
+body {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  font-size: 4rem;
+}
+.container {
+  width: 70vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: gainsboro;
+  padding: 4vh 4vw;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 5px;
+  padding: 3vh 3vw;
+}
+.sentence {
+  color: navy;
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  flex-wrap: nowrap;
+  height: 10vh;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.letter {
+  height: 9vh;
+  background-color: lightgray;
+  border: 3px solid white;
+  flex: 1;
+}
