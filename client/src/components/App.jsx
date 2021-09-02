@@ -5,10 +5,11 @@ import Table from "./Table";
 class App extends React.Component {
   constructor() {
     super();
-    this.state = { data: null, page: 2, rows: null, scrambledSentence: null };
+    this.state = { data: null, page: 9, rows: null, scrambledSentence: null };
   }
   componentDidMount() {
     const { page } = this.state;
+    document.addEventListener("keydown", this.handleGetChar);
     const fetchData = axios
       .get(`https://api.hatchways.io/assessment/sentences/${page}`)
       .then((res) => {
@@ -20,12 +21,20 @@ class App extends React.Component {
         console.error(err);
       });
   }
+
+  handleGetChar = (e) => {
+    e.preventDefault();
+    let key = e.key;
+    if (key.match(/[a-zA-z]/)) {
+      console.log(true);
+    }
+  };
   handleScrambleSentence = () => {
     const { data } = this.state;
     const wordArray = data.split(" ");
     this.setState({ wordLength: wordArray.length });
     const scrambled = wordArray.map((word) => {
-      if (word.length < 3) {
+      if (word.length < 4) {
         return word;
       }
       let letterArray = word.split("");

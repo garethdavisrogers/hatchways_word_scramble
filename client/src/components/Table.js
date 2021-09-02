@@ -6,7 +6,11 @@ export default function Table({ data }) {
   return (
     <div className="table">
       {words.map((word, ind) => (
-        <Row key={word + ":" + ind} word={word} />
+        <Row
+          key={word + ":" + ind}
+          word={word}
+          isLast={ind !== words.length - 1}
+        />
       ))}
     </div>
   );
