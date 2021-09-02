@@ -5,13 +5,38 @@ import Table from "./Table";
 class App extends React.Component {
   constructor() {
     super();
-    this.state = { data: null, page: 9, rows: null, scrambledSentence: null };
+
+    this.state = {
+      data: null,
+      page: 0,
+      rows: null,
+      scrambledSentence: null,
+      lettersGuessed: "",
+      lettersToGuess: null,
+      letterCounter: {},
+      gameOver: true,
+      score: -1,
+    };
   }
-  componentDidMount() {
-    const { page } = this.state;
-    document.addEventListener("keydown", this.handleGetChar);
-    const fetchData = axios
-      .get(`https://api.hatchways.io/assessment/sentences/${page}`)
+
+  handleAPIFetch = () => {
+    const { page, gameOver, score } = this.state;
+    const fetchPage = page + 1;
+    const currentScore = score + 1;
+    const resetStateObject = {
+      data: null,
+      page: fetchPage,
+      rows: null,
+      scrambledSentence: null,
+      lettersGuessed: "",
+      lettersToGuess: null,
+      letterCounter: {},
+      gameOver: false,
+      score: currentScore,
+    };
+    this.setState(resetStateObject);
+    axios
+      .get(`https://api.hatchways.io/assessment/sentences/${fetchPage}`)
       .then((res) => {
         const fetchedSentence = res.data.data.sentence;
         this.setState({ data: fetchedSentence });
@@ -20,15 +45,73 @@ class App extends React.Component {
       .catch((err) => {
         console.error(err);
       });
+  };
+
+  componentDidMount() {
+    this.handleAPIFetch();
+    document.addEventListener("keydown", this.handleGetChar);
   }
 
+  handleResetGame = () => {
+    const { page } = this.state;
+    const pageUp = page + 1;
+    this.setState({ page: pageUp });
+    this.handleAPIFetch();
+  };
+
   handleGetChar = (e) => {
+    const { gameOver } = this.state;
     e.preventDefault();
+    if (gameOver && e.keyCode === 13) {
+      this.handleResetGame();
+    }
     let key = e.key;
-    if (key.match(/[a-zA-z]/)) {
-      console.log(true);
+    if (key.match(/^[a-zA-Z]{1}$/)) {
+      this.handleGuessLetter(key);
     }
   };
+
+  handleGuessLetter = (letter) => {
+    const { lettersToGuess, lettersGuessed, letterCounter, gameOver } =
+      this.state;
+    if (gameOver) {
+      return;
+    }
+    const lowerCaseLetter = letter.toLowerCase();
+    if (lowerCaseLetter == lettersToGuess[0].toLowerCase()) {
+      const currentLetter = lettersToGuess.slice(0, 1);
+      const lettersLeftSliced = lettersToGuess.slice(1);
+      const lettersGuessedConcat = lettersGuessed + currentLetter;
+      this.setState({
+        lettersGuessed: lettersGuessedConcat,
+        lettersToGuess: lettersLeftSliced,
+      });
+
+      let entry;
+      if (letterCounter[lowerCaseLetter] !== undefined) {
+        entry = letterCounter;
+        entry[letter] += 1;
+        this.setState({ letterCounter: entry });
+      } else {
+        entry = letterCounter;
+        entry[lowerCaseLetter] = 0;
+        this.setState({ letterCounter: entry });
+      }
+      let index = letterCounter[lowerCaseLetter];
+      let correctLetter = document.getElementsByName(lowerCaseLetter)[index];
+      correctLetter.style.background = "green";
+      correctLetter.style.color = "white";
+      correctLetter.innerText = currentLetter;
+      if (lettersLeftSliced.length === 0) {
+        console.log("you win");
+        this.setState({ gameOver: true });
+        return;
+      }
+    } else {
+      console.log("incorrect");
+    }
+  };
+
   handleScrambleSentence = () => {
     const { data } = this.state;
     const wordArray = data.split(" ");
@@ -44,10 +127,13 @@ class App extends React.Component {
       let middle = letterArray.join("");
       return first + middle + last;
     });
-    this.setState({ scrambledSentence: scrambled.join(" ") });
+    this.setState({
+      scrambledSentence: scrambled.join(" "),
+      lettersToGuess: wordArray.join(""),
+    });
   };
   render() {
-    const { data, scrambledSentence } = this.state;
+    const { data, scrambledSentence, gameOver, score } = this.state;
     return (
       <div className="container">
         <div className="page">
@@ -59,8 +145,9 @@ class App extends React.Component {
             </div>
             <div>Guess the sentence! Starting typing</div>
             <br />
+            {gameOver && <button onClick={this.handleResetGame}>Next</button>}
             <div>The yellow blocks are meant for spaces</div>
-            <div>Score: 0</div>
+            <div>Score: {score}</div>
           </div>
           {scrambledSentence && (
             <Table data={data} scrambledSentence={scrambledSentence} />
