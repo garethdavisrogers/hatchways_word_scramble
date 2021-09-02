@@ -5,7 +5,7 @@ import Table from "./Table";
 class App extends React.Component {
   constructor() {
     super();
-    this.state = { data: null, page: 2, rows: null };
+    this.state = { data: null, page: 2, rows: null, scrambledSentence: null };
   }
   componentDidMount() {
     const { page } = this.state;
@@ -13,10 +13,9 @@ class App extends React.Component {
       .get(`https://api.hatchways.io/assessment/sentences/${page}`)
       .then((res) => {
         const fetchedSentence = res.data.data.sentence;
-        this.setState({
-          data: fetchedSentence,
-        });
+        this.setState({ data: fetchedSentence });
       })
+      .then(() => this.handleScrambleSentence())
       .catch((err) => {
         console.error(err);
       });
@@ -36,23 +35,27 @@ class App extends React.Component {
       let middle = letterArray.join("");
       return first + middle + last;
     });
-    this.setState({ data: scrambled.join(" ") });
+    this.setState({ scrambledSentence: scrambled.join(" ") });
   };
   render() {
-    const { data } = this.state;
+    const { data, scrambledSentence } = this.state;
     return (
       <div className="container">
         <div className="page">
           <div className="text-display">
             <div className="sentence">
-              {data ? data : "Fetching Hatchways API Data"}
+              {scrambledSentence
+                ? scrambledSentence
+                : "Fetching Hatchways API Data"}
             </div>
             <div>Guess the sentence! Starting typing</div>
             <br />
             <div>The yellow blocks are meant for spaces</div>
             <div>Score: 0</div>
           </div>
-          {data && <Table data={data} />}
+          {scrambledSentence && (
+            <Table data={data} scrambledSentence={scrambledSentence} />
+          )}
         </div>
       </div>
     );
