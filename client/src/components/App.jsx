@@ -7,34 +7,26 @@ class App extends React.Component {
     super();
 
     this.state = {
-      data: null,
       page: 0,
-      rows: null,
-      scrambledSentence: null,
-      lettersGuessed: "",
-      lettersToGuess: null,
-      letterCounter: {},
-      gameOver: true,
+      roundOver: false,
       score: -1,
     };
   }
 
   handleAPIFetch = () => {
-    const { page, gameOver, score } = this.state;
+    const { page, roundOver, score } = this.state;
     const fetchPage = page + 1;
     const currentScore = score + 1;
-    const resetStateObject = {
+
+    this.setState({
       data: null,
-      page: fetchPage,
-      rows: null,
       scrambledSentence: null,
-      lettersGuessed: "",
       lettersToGuess: null,
       letterCounter: {},
-      gameOver: false,
       score: currentScore,
-    };
-    this.setState(resetStateObject);
+      page: fetchPage,
+      allRoundsComplete: false,
+    });
     axios
       .get(`https://api.hatchways.io/assessment/sentences/${fetchPage}`)
       .then((res) => {
@@ -60,31 +52,28 @@ class App extends React.Component {
   };
 
   handleGetChar = (e) => {
-    const { gameOver } = this.state;
+    const { roundOver } = this.state;
     e.preventDefault();
-    if (gameOver && e.keyCode === 13) {
+    if (roundOver && e.code === "Enter") {
       this.handleResetGame();
     }
     let key = e.key;
-    if (key.match(/^[a-zA-Z]{1}$/)) {
-      this.handleGuessLetter(key);
+    if (key.match(/^[a-zA-Z]{1}$/) || e.code === "Space") {
+      this.handleGuessLetter(key, true);
     }
   };
 
   handleGuessLetter = (letter) => {
-    const { lettersToGuess, lettersGuessed, letterCounter, gameOver } =
-      this.state;
-    if (gameOver) {
+    const { lettersToGuess, letterCounter, roundOver } = this.state;
+    if (roundOver) {
       return;
     }
     const lowerCaseLetter = letter.toLowerCase();
-    if (lowerCaseLetter == lettersToGuess[0].toLowerCase()) {
-      const currentLetter = lettersToGuess.slice(0, 1);
-      const lettersLeftSliced = lettersToGuess.slice(1);
-      const lettersGuessedConcat = lettersGuessed + currentLetter;
+    const currentLetter = lettersToGuess[0];
+    if (lowerCaseLetter === currentLetter.toLowerCase()) {
+      const lettersRemaining = lettersToGuess.slice(1);
       this.setState({
-        lettersGuessed: lettersGuessedConcat,
-        lettersToGuess: lettersLeftSliced,
+        lettersToGuess: lettersRemaining,
       });
 
       let entry;
@@ -99,16 +88,25 @@ class App extends React.Component {
       }
       let index = letterCounter[lowerCaseLetter];
       let correctLetter = document.getElementsByName(lowerCaseLetter)[index];
-      correctLetter.style.background = "green";
+      correctLetter.style.background = "#4caf50";
       correctLetter.style.color = "white";
       correctLetter.innerText = currentLetter;
-      if (lettersLeftSliced.length === 0) {
+      if (lettersRemaining.length === 0) {
         console.log("you win");
-        this.setState({ gameOver: true });
+        this.setState({ roundOver: true });
         return;
       }
     } else {
-      console.log("incorrect");
+      let currentLetterIndex = letterCounter[lowerCaseLetter];
+      if (currentLetterIndex === undefined) {
+        currentLetterIndex = 0;
+      }
+      const currentLetterLowerCase = currentLetter.toLowerCase();
+      debugger;
+      let currentSpace = document.getElementsByName(currentLetterLowerCase)[
+        currentLetterIndex
+      ];
+      currentSpace.innerText = lowerCaseLetter;
     }
   };
 
@@ -116,43 +114,47 @@ class App extends React.Component {
     const { data } = this.state;
     const wordArray = data.split(" ");
     this.setState({ wordLength: wordArray.length });
-    const scrambled = wordArray.map((word) => {
+    const scrambledWordArray = wordArray.map((word) => {
       if (word.length < 4) {
         return word;
       }
       let letterArray = word.split("");
       let first = letterArray.shift();
       let last = letterArray.pop();
-      letterArray.sort(() => Math.random() - 0.5);
-      let middle = letterArray.join("");
+      let middle = letterArray.sort(() => Math.random() - 0.5).join("");
       return first + middle + last;
     });
     this.setState({
-      scrambledSentence: scrambled.join(" "),
-      lettersToGuess: wordArray.join(""),
+      scrambledSentence: scrambledWordArray.join(" "),
+      lettersToGuess: scrambledWordArray.join(" "),
     });
   };
   render() {
-    const { data, scrambledSentence, gameOver, score } = this.state;
+    const { data, scrambledSentence, roundOver, score, allRoundsComplete } =
+      this.state;
     return (
       <div className="container">
-        <div className="page">
-          <div className="text-display">
-            <div className="sentence">
-              {scrambledSentence
-                ? scrambledSentence
-                : "Fetching Hatchways API Data"}
+        {!allRoundsComplete && (
+          <div className="page">
+            <div className="text-display">
+              <div className="sentence">
+                {scrambledSentence
+                  ? scrambledSentence
+                  : "Fetching Hatchways API Data"}
+              </div>
+              <div>Guess the sentence! Starting typing</div>
+              <br />
+              {roundOver && (
+                <button onClick={this.handleResetGame}>Next</button>
+              )}
+              <div>The yellow blocks are meant for spaces</div>
+              <div>Score: {score}</div>
             </div>
-            <div>Guess the sentence! Starting typing</div>
-            <br />
-            {gameOver && <button onClick={this.handleResetGame}>Next</button>}
-            <div>The yellow blocks are meant for spaces</div>
-            <div>Score: {score}</div>
+            {scrambledSentence && (
+              <Table data={data} scrambledSentence={scrambledSentence} />
+            )}
           </div>
-          {scrambledSentence && (
-            <Table data={data} scrambledSentence={scrambledSentence} />
-          )}
-        </div>
+        )}
       </div>
     );
   }

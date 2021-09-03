@@ -22,7 +22,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: gainsboro;
+  background: #e1e1e1;
   padding: 4vh 4vw;
 }
 
@@ -47,6 +47,7 @@ body {
   flex-wrap: nowrap;
   height: 10vh;
   justify-content: space-between;
+  gap: 1vh;
   align-items: center;
 }
 
@@ -55,4 +56,8 @@ body {
   background-color: lightgray;
   border: 3px solid white;
   flex: 1;
+}
+
+.space-block {
+  background: #ffb74d;
 }

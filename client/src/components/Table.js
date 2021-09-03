@@ -9,7 +9,7 @@ export default function Table({ data }) {
         <Row
           key={word + ":" + ind}
           word={word}
-          isLast={ind !== words.length - 1}
+          isLastRow={ind === words.length - 1}
         />
       ))}
     </div>
