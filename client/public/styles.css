@@ -17,6 +17,15 @@ body {
   font-family: "Open Sans";
 }
 
+.btn {
+  color: white;
+  background-color: green;
+  padding: 2vw;
+  font-size: 2rem;
+  align-self: center;
+  width: 15vw;
+}
+
 .container {
   width: 70vw;
   display: flex;
@@ -60,4 +69,19 @@ body {
 
 .space-block {
   background: #ffb74d;
+}
+
+.blinking {
+  opacity: 1;
+  animation: fade 1s linear infinite;
+}
+
+@keyframes fade {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
 }

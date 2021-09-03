@@ -8,25 +8,29 @@ class App extends React.Component {
 
     this.state = {
       page: 0,
-      roundOver: false,
       score: -1,
+      gameOver: false,
     };
   }
 
   handleAPIFetch = () => {
     const { page, roundOver, score } = this.state;
+    if (score === 9) {
+      this.setState({ gameOver: true });
+      return;
+    }
     const fetchPage = page + 1;
     const currentScore = score + 1;
-
     this.setState({
       data: null,
       scrambledSentence: null,
       lettersToGuess: null,
       score: currentScore,
       page: fetchPage,
-      allRoundsComplete: false,
       currentGuessIndex: 0,
+      roundOver: false,
     });
+
     axios
       .get(`https://api.hatchways.io/assessment/sentences/${fetchPage}`)
       .then((res) => {
@@ -45,9 +49,6 @@ class App extends React.Component {
   }
 
   handleResetGame = () => {
-    const { page } = this.state;
-    const pageUp = page + 1;
-    this.setState({ page: pageUp });
     this.handleAPIFetch();
   };
 
@@ -68,28 +69,34 @@ class App extends React.Component {
     if (roundOver) {
       return;
     }
+
+    const currentLetterSpace =
+      document.getElementsByClassName("letter")[currentGuessIndex];
+    currentLetterSpace.removeChild(currentLetterSpace.childNodes[0]);
     const guessedLetterToLowerCase = letter.toLowerCase();
     const currentLetterToGuess = lettersToGuess[0];
     if (guessedLetterToLowerCase === currentLetterToGuess.toLowerCase()) {
       const lettersRemaining = lettersToGuess.slice(1);
       this.setState({ lettersToGuess: lettersRemaining });
-      let correctLetter =
-        document.getElementsByClassName("letter")[currentGuessIndex];
-      correctLetter.style.background = "#4caf50";
-      correctLetter.style.color = "white";
-      correctLetter.innerText = currentLetterToGuess;
+
+      currentLetterSpace.style.background = "#4caf50";
+      currentLetterSpace.style.color = "white";
+      currentLetterSpace.innerText = currentLetterToGuess;
       if (lettersRemaining.length === 0) {
-        console.log("you win the round");
         this.setState({ roundOver: true });
         return;
       }
       const incrementedCurrentGuessIndex = currentGuessIndex + 1;
       this.setState({ currentGuessIndex: incrementedCurrentGuessIndex });
+      const cursor = document.createElement("div");
+      cursor.classList.add("blinking");
+      cursor.innerText = "|";
+      document
+        .getElementsByClassName("letter")
+        [incrementedCurrentGuessIndex].appendChild(cursor);
     } else {
       const currentLetterToGuessLowerCase = currentLetterToGuess.toLowerCase();
-      let currentSpace =
-        document.getElementsByClassName("letter")[currentGuessIndex];
-      currentSpace.innerText = letter;
+      currentLetterSpace.innerText = letter;
     }
   };
 
@@ -111,13 +118,16 @@ class App extends React.Component {
       lettersToGuess: data,
       scrambledSentence: scrambledWordArray.join(" "),
     });
+    const startingCursor = document.createElement("div");
+    startingCursor.classList.add("blinking");
+    startingCursor.innerText = "|";
+    document.getElementsByClassName("letter")[0].appendChild(startingCursor);
   };
   render() {
-    const { data, scrambledSentence, roundOver, score, allRoundsComplete } =
-      this.state;
+    const { data, scrambledSentence, roundOver, score, gameOver } = this.state;
     return (
       <div className="container">
-        {!allRoundsComplete && (
+        {gameOver === false && (
           <div className="page">
             <div className="text-display">
               <div className="sentence">
@@ -127,17 +137,20 @@ class App extends React.Component {
               </div>
               <div>Guess the sentence! Starting typing</div>
               <br />
-              {roundOver && (
-                <button onClick={this.handleResetGame}>Next</button>
-              )}
               <div>The yellow blocks are meant for spaces</div>
               <div>Score: {score}</div>
             </div>
             {scrambledSentence && (
               <Table data={data} scrambledSentence={scrambledSentence} />
             )}
+            {roundOver && (
+              <div className="btn" onClick={this.handleResetGame}>
+                Next
+              </div>
+            )}
           </div>
         )}
+        <div>{gameOver && <div>You Win!</div>}</div>
       </div>
     );
   }
