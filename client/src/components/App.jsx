@@ -22,10 +22,10 @@ class App extends React.Component {
       data: null,
       scrambledSentence: null,
       lettersToGuess: null,
-      letterCounter: {},
       score: currentScore,
       page: fetchPage,
       allRoundsComplete: false,
+      currentGuessIndex: 0,
     });
     axios
       .get(`https://api.hatchways.io/assessment/sentences/${fetchPage}`)
@@ -59,54 +59,37 @@ class App extends React.Component {
     }
     let key = e.key;
     if (key.match(/^[a-zA-Z]{1}$/) || e.code === "Space") {
-      this.handleGuessLetter(key, true);
+      this.handleGuessLetter(key);
     }
   };
 
   handleGuessLetter = (letter) => {
-    const { lettersToGuess, letterCounter, roundOver } = this.state;
+    const { lettersToGuess, currentGuessIndex, roundOver } = this.state;
     if (roundOver) {
       return;
     }
-    const lowerCaseLetter = letter.toLowerCase();
-    const currentLetter = lettersToGuess[0];
-    if (lowerCaseLetter === currentLetter.toLowerCase()) {
+    const guessedLetterToLowerCase = letter.toLowerCase();
+    const currentLetterToGuess = lettersToGuess[0];
+    if (guessedLetterToLowerCase === currentLetterToGuess.toLowerCase()) {
       const lettersRemaining = lettersToGuess.slice(1);
-      this.setState({
-        lettersToGuess: lettersRemaining,
-      });
-
-      let entry;
-      if (letterCounter[lowerCaseLetter] !== undefined) {
-        entry = letterCounter;
-        entry[letter] += 1;
-        this.setState({ letterCounter: entry });
-      } else {
-        entry = letterCounter;
-        entry[lowerCaseLetter] = 0;
-        this.setState({ letterCounter: entry });
-      }
-      let index = letterCounter[lowerCaseLetter];
-      let correctLetter = document.getElementsByName(lowerCaseLetter)[index];
+      this.setState({ lettersToGuess: lettersRemaining });
+      let correctLetter =
+        document.getElementsByClassName("letter")[currentGuessIndex];
       correctLetter.style.background = "#4caf50";
       correctLetter.style.color = "white";
-      correctLetter.innerText = currentLetter;
+      correctLetter.innerText = currentLetterToGuess;
       if (lettersRemaining.length === 0) {
-        console.log("you win");
+        console.log("you win the round");
         this.setState({ roundOver: true });
         return;
       }
+      const incrementedCurrentGuessIndex = currentGuessIndex + 1;
+      this.setState({ currentGuessIndex: incrementedCurrentGuessIndex });
     } else {
-      let currentLetterIndex = letterCounter[lowerCaseLetter];
-      if (currentLetterIndex === undefined) {
-        currentLetterIndex = 0;
-      }
-      const currentLetterLowerCase = currentLetter.toLowerCase();
-      debugger;
-      let currentSpace = document.getElementsByName(currentLetterLowerCase)[
-        currentLetterIndex
-      ];
-      currentSpace.innerText = lowerCaseLetter;
+      const currentLetterToGuessLowerCase = currentLetterToGuess.toLowerCase();
+      let currentSpace =
+        document.getElementsByClassName("letter")[currentGuessIndex];
+      currentSpace.innerText = letter;
     }
   };
 
@@ -125,8 +108,8 @@ class App extends React.Component {
       return first + middle + last;
     });
     this.setState({
+      lettersToGuess: data,
       scrambledSentence: scrambledWordArray.join(" "),
-      lettersToGuess: scrambledWordArray.join(" "),
     });
   };
   render() {
