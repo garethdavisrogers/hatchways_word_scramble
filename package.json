@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest --env=jsdom --reporters default jest-stare",
     "build": "webpack -w",
-    "start": "nodemon server/index.js"
+    "start": "node server/index.js & webpack"
   },
   "keywords": [],
   "author": "",
