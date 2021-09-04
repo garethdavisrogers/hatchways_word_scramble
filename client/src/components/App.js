@@ -136,7 +136,6 @@ class App extends React.Component {
                   : "Fetching Hatchways API Data"}
               </div>
               <div>Guess the sentence! Starting typing</div>
-              <br />
               <div>The yellow blocks are meant for spaces</div>
               <div>Score: {score}</div>
             </div>

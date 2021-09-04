@@ -13,7 +13,7 @@ body {
   display: flex;
   justify-content: center;
   text-align: center;
-  font-size: 4rem;
+  font-size: 2rem;
   font-family: "Open Sans";
 }
 
@@ -39,16 +39,19 @@ body {
   display: flex;
   flex-direction: column;
   background-color: white;
-  border-radius: 5px;
-  padding: 3vh 3vw;
+  border-radius: 8px;
+  padding: 3vh 2vw;
 }
 .sentence {
-  color: navy;
+  color: royalblue;
+  font-weight: 400;
+  font-size: 5rem;
 }
 
 .table {
   display: flex;
   flex-direction: column;
+  font-size: 3rem;
 }
 
 .row {
